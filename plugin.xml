@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension
+         point="org.globaltester.smartcardshell.protocols">
+      <protocol
+            class="org.globaltester.smartcardshell.protocols.ios7816.ProtocolProvider"
+            name="ISO7816">
+      </protocol>
+   </extension>
+   <extension
+         point="org.globaltester.smartcardshell.protocols">
+      <protocol></protocol>
+   </extension>
+
+</plugin>

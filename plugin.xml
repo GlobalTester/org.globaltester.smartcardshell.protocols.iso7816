@@ -8,9 +8,5 @@
             name="ISO7816">
       </protocol>
    </extension>
-   <extension
-         point="org.globaltester.smartcardshell.protocols">
-      <protocol></protocol>
-   </extension>
 
 </plugin>

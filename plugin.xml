@@ -4,7 +4,7 @@
    <extension
          point="org.globaltester.smartcardshell.protocols">
       <protocol
-            class="org.globaltester.smartcardshell.protocols.ios7816.ProtocolProvider"
+            class="org.globaltester.smartcardshell.protocols.iso7816.ProtocolProvider"
             name="ISO7816">
       </protocol>
    </extension>

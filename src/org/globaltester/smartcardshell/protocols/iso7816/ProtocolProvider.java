@@ -109,8 +109,7 @@ public class ProtocolProvider extends AbstractScshProtocolProvider {
 	private static ScshCommand selectAID;
 	{
 		selectAID = new ScshCommand("selectAID");
-		selectAID.setHelp("Select the card application with the given ID");
-		selectAID.setHelpReturn("Select AID and return FCI by card as ByteString");
+		selectAID.setHelp("Select the card application with the given ID and return FCI as ByteString");
 		
 		ScshCommandParameter aidParam = new ScshCommandParameter("aid");
 		aidParam.setHelp("AID to select as String or ByteString");
@@ -122,10 +121,34 @@ public class ProtocolProvider extends AbstractScshProtocolProvider {
 		impl += "    cmd = cmd.concat(new ByteString(HexString.hexifyByte(aid.length),HEX));\n";
 		impl += "    cmd = cmd.concat(new ByteString(aid,HEX));\n";
 		impl += "    cmd = cmd.concat(new ByteString(\"00\",HEX));\n";
+		impl += "var fci = card.gt_sendCommand(cmd);\n";
+		impl += "assertStatusWord(SW_NoError, card.SW.toString(HEX));\n";
+		impl += "fci = new ByteString(fci,HEX);\n";
+		impl += "return fci;\n";
+		selectAID.setImplementation(impl);
+	}
+	
+	
+	private static ScshCommand readBinary;
+	{
+		readBinary = new ScshCommand("readBinary");
+		readBinary.setHelp("Read Binary");
+		
+		ScshCommandParameter ParamP1 = new ScshCommandParameter("fileID");
+		ParamP1.setHelp("AID to select as String or ByteString");
+		readBinary.addParam(ParamP1);
+		
+		String impl = "";
+		impl += "if (!(aid instanceof ByteString)) aid = new ByteString(aid,HEX);\n";
+		impl += "var cmd = new ByteString(\"00 B0 00 00\", HEX);\n";
+		impl += "    cmd = cmd.concat(new ByteString(HexString.hexifyByte(aid.length),HEX));\n";
+		impl += "    cmd = cmd.concat(new ByteString(aid,HEX));\n";
+		impl += "    cmd = cmd.concat(new ByteString(\"00\",HEX));\n";
 		impl += "var data = card.gt_sendCommand(cmd);\n";
 		impl += "assertStatusWord(SW_NoError, card.SW.toString(HEX));\n";
+		impl += "data = new ByteString(data,HEX);\n";
 		impl += "return data;\n";
-		selectAID.setImplementation(impl);
+		readBinary.setImplementation(impl);
 	}
 	
 	@Override
@@ -134,6 +157,7 @@ public class ProtocolProvider extends AbstractScshProtocolProvider {
 		commandList.add(getChallenge);
 		commandList.add(mutualAuthenticate);
 		commandList.add(selectAID);
+		commandList.add(readBinary);
 	}
 
 }

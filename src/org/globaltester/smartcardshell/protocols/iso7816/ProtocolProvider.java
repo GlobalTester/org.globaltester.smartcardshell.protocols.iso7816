@@ -106,11 +106,31 @@ public class ProtocolProvider extends AbstractScshProtocolProvider {
 		buildAPDU.setImplementation(impl);
 	}
 	
+	private static ScshCommand selectAID;
+	{
+		selectAID = new ScshCommand("selectAID");
+		selectAID.setHelp("Select the card application with the given ID");
+		selectAID.setHelpReturn("");
+		
+		ScshCommandParameter aidParam = new ScshCommandParameter("aid");
+		aidParam.setHelp("AID to select");
+		selectAID.addParam(aidParam);
+		
+		String impl = "";
+		impl += "var cmd = new ByteString(\"00 A4 04 0C\", HEX);\n";
+		impl += "    cmd = cmd.concat(new ByteString(HexString.hexifyByte(aid.length),HEX));\n";
+		impl += "    cmd = cmd.concat(new ByteString(aid,HEX));\n";
+		impl += "card.gt_sendCommand(cmd);\n";
+		impl += "assertStatusWord(SW_NoError, card.SW.toString(HEX));\n";
+		selectAID.setImplementation(impl);
+	}
+	
 	@Override
 	public void addCommands(List<ScshCommand> commandList) {
 		commandList.add(buildAPDU);
 		commandList.add(getChallenge);
 		commandList.add(mutualAuthenticate);
+		commandList.add(selectAID);
 	}
 
 }

@@ -172,7 +172,8 @@ public class ProtocolProvider extends AbstractScshProtocolProvider {
 		impl += "}\n";
 		impl += "\n";
 		impl += "var rdata = card.gt_sendCommand(cmd);\n";
-		impl += "assertStatusWord(SW_NoError, card.SW.toString(HEX));\n";
+		//Check Status words in testcase
+		//impl += "assertStatusWord(SW_NoError, card.SW.toString(HEX));\n";
 		impl += "rdata = new ByteString(rdata,HEX);\n";
 		impl += "return rdata;\n";
 		readBinary.setImplementation(impl);

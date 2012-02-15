@@ -132,22 +132,49 @@ public class ProtocolProvider extends AbstractScshProtocolProvider {
 	private static ScshCommand readBinary;
 	{
 		readBinary = new ScshCommand("readBinary");
-		readBinary.setHelp("Read Binary");
+		readBinary.setHelp("Send read binary with P1, P2, command data, and le as byteString or btring as parameters");
 		
-		ScshCommandParameter ParamP1 = new ScshCommandParameter("fileID");
-		ParamP1.setHelp("AID to select as String or ByteString");
-		readBinary.addParam(ParamP1);
+		ScshCommandParameter p1Param = new ScshCommandParameter("p1");
+		p1Param.setHelp("String or byteString as P1 of the APDU");
+		readBinary.addParam(p1Param);
+		
+		ScshCommandParameter p2Param = new ScshCommandParameter("p2");
+		p2Param.setHelp("String or byteString as P2 of the APDU");
+		readBinary.addParam(p2Param);
+		
+		ScshCommandParameter dataParam = new ScshCommandParameter("cdata");
+		dataParam.setHelp("ByteString or string containing the command datafield, if not present the command will have no data field");
+		readBinary.addParam(dataParam);
+		
+		ScshCommandParameter leParam = new ScshCommandParameter("le");
+		leParam.setHelp("Integer from which Le will be constructed, 256 will be encoded as 00 in short format, 65536 will be ancoded as 0000 in extended length format, if parameter is absent the command APDU will not contain an Le field");
+		readBinary.addParam(leParam);
 		
 		String impl = "";
-		impl += "if (!(aid instanceof ByteString)) aid = new ByteString(aid,HEX);\n";
-		impl += "var cmd = new ByteString(\"00 B0 00 00\", HEX);\n";
-		impl += "    cmd = cmd.concat(new ByteString(HexString.hexifyByte(aid.length),HEX));\n";
-		impl += "    cmd = cmd.concat(new ByteString(aid,HEX));\n";
-		impl += "    cmd = cmd.concat(new ByteString(\"00\",HEX));\n";
-		impl += "var data = card.gt_sendCommand(cmd);\n";
+		impl += "if (!(p1 == undefined))\n";
+		impl += "	if (!(p1 instanceof ByteString)) p1 = new ByteString(p1,HEX);\n";
+		impl += "if (!(p2 == undefined))\n";
+		impl += "	if (!(p2 instanceof ByteString)) p2 = new ByteString(p2,HEX);\n";
+		impl += "if (!(cdata == undefined))\n";
+		impl += "	if (!(cdata instanceof ByteString)) cdata = new ByteString(cdata,HEX);\n";
+		impl += "if (!(le == undefined))\n";
+		impl += "	if (!(le instanceof ByteString)) le = new ByteString(le,HEX);\n";
+		impl += "var cmd = new ByteString(\"00 B0\", HEX);\n";
+		impl += "    cmd = cmd.concat(new ByteString(p1,HEX));\n";
+		impl += "    cmd = cmd.concat(new ByteString(p2,HEX));\n";
+		//FIXME handle extendedLength
+		impl += "if (data) {\n";
+		impl += "    cmd = cmd.concat(new ByteString(HexString.hexifyByte(cdata.length),HEX));\n";
+		impl += "    cmd = cmd.concat(new ByteString(cdata,HEX));\n";
+		impl += "}\n";
+		impl += "if (le) {\n";
+		impl += "    cmd = cmd.concat(new ByteString(le,HEX));\n";
+		impl += "}\n";
+		impl += "\n";
+		impl += "var rdata = card.gt_sendCommand(cmd);\n";
 		impl += "assertStatusWord(SW_NoError, card.SW.toString(HEX));\n";
-		impl += "data = new ByteString(data,HEX);\n";
-		impl += "return data;\n";
+		impl += "rdata = new ByteString(rdata,HEX);\n";
+		impl += "return rdata;\n";
 		readBinary.setImplementation(impl);
 	}
 	

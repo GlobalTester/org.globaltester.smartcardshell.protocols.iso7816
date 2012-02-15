@@ -110,17 +110,18 @@ public class ProtocolProvider extends AbstractScshProtocolProvider {
 	{
 		selectAID = new ScshCommand("selectAID");
 		selectAID.setHelp("Select the card application with the given ID");
-		selectAID.setHelpReturn("");
+		selectAID.setHelpReturn("Select AID and return FCI by card as ByteString");
 		
 		ScshCommandParameter aidParam = new ScshCommandParameter("aid");
 		aidParam.setHelp("AID to select");
 		selectAID.addParam(aidParam);
 		
 		String impl = "";
-		impl += "var cmd = new ByteString(\"00 A4 04 0C\", HEX);\n";
+		impl += "var cmd = new ByteString(\"00 A4 04 00\", HEX);\n";
 		impl += "    cmd = cmd.concat(new ByteString(HexString.hexifyByte(aid.length),HEX));\n";
 		impl += "    cmd = cmd.concat(new ByteString(aid,HEX));\n";
-		impl += "card.gt_sendCommand(cmd);\n";
+		impl += "    cmd = cmd.concat(new ByteString(\"00\",HEX));\n";
+		impl += "var data = card.gt_sendCommand(cmd);\n";
 		impl += "assertStatusWord(SW_NoError, card.SW.toString(HEX));\n";
 		selectAID.setImplementation(impl);
 	}

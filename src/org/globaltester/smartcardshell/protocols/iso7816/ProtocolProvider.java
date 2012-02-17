@@ -110,6 +110,7 @@ public class ProtocolProvider extends AbstractScshProtocolProvider {
 	{
 		selectAID = new ScshCommand("selectAID");
 		selectAID.setHelp("Select the card application with the given ID and return FCI as ByteString");
+		selectAID.setHelpReturn("file control information (fci) of selected application as ByteString");
 		
 		ScshCommandParameter aidParam = new ScshCommandParameter("aid");
 		aidParam.setHelp("AID to select as String or ByteString");
@@ -123,7 +124,6 @@ public class ProtocolProvider extends AbstractScshProtocolProvider {
 		impl += "    cmd = cmd.concat(new ByteString(\"00\",HEX));\n";
 		impl += "var fci = card.gt_sendCommand(cmd);\n";
 		impl += "assertStatusWord(SW_NoError, card.SW.toString(HEX));\n";
-		impl += "fci = new ByteString(fci,HEX);\n";
 		impl += "return fci;\n";
 		selectAID.setImplementation(impl);
 	}
@@ -132,7 +132,8 @@ public class ProtocolProvider extends AbstractScshProtocolProvider {
 	private static ScshCommand readBinary;
 	{
 		readBinary = new ScshCommand("readBinary");
-		readBinary.setHelp("Send read binary with P1, P2, command data, and le as byteString or btring as parameters");
+		readBinary.setHelp("Send read binary with P1, P2, command data, and le as String or ByteString");
+		readBinary.setHelpReturn("data was read from file as ByteString");
 		
 		ScshCommandParameter p1Param = new ScshCommandParameter("p1");
 		p1Param.setHelp("String or byteString as P1 of the APDU");
@@ -172,12 +173,58 @@ public class ProtocolProvider extends AbstractScshProtocolProvider {
 		impl += "}\n";
 		impl += "\n";
 		impl += "var rdata = card.gt_sendCommand(cmd);\n";
-		//Check Status words in testcase
-		//impl += "assertStatusWord(SW_NoError, card.SW.toString(HEX));\n";
-		impl += "rdata = new ByteString(rdata,HEX);\n";
 		impl += "return rdata;\n";
 		readBinary.setImplementation(impl);
 	}
+	
+	private static ScshCommand selectFile;
+	{
+		selectFile = new ScshCommand("selectFile");
+		selectFile.setHelp("Send select file with file identifier");
+		
+		ScshCommandParameter fidParam = new ScshCommandParameter("fileIdentifier");
+		fidParam.setHelp("file identifier with one or two bytes as string or ByteString");
+		selectFile.addParam(fidParam);
+		
+		String impl = "";
+		impl += "	if (!(fileIdentifier instanceof ByteString)) fileIdentifier = new ByteString(fileIdentifier,HEX);\n";
+		impl += "var cmd = new ByteString(\"00 A4 02 0C 02\", HEX);\n";
+		impl += "if (fileIdentifier.length <= 2) {\n";
+		impl += "    cmd = cmd.concat(new ByteString(\"01\",HEX));\n";
+		impl += "    cmd = cmd.concat(new ByteString(fileIdentifier,HEX));\n";
+		impl += "}\n";
+		impl += "else \n";
+		impl += "{\n";
+		impl += "    cmd = cmd.concat(new ByteString(fileIdentifier,HEX));\n";
+		impl += "}\n";
+		impl += "\n";
+		impl += "card.gt_sendCommand(cmd);\n";
+		selectFile.setImplementation(impl);
+	}
+	
+	private static ScshCommand readFile;
+	{
+		
+		readFile = new ScshCommand("readFile");
+		readFile.setHelp("Send read file with fileIdentifier");
+		
+		ScshCommandParameter fidParam = new ScshCommandParameter("fileIdentifier");
+		fidParam.setHelp("file Identifier with one byte as String or ByteString");
+		readFile.addParam(fidParam);
+		readFile.setHelpReturn("data was read from file as ByteString");
+		
+		String impl = "";
+		impl += "if (!(fileIdentifier instanceof ByteString)) fileIdentifier = new ByteString(fileIdentifier,HEX);\n";
+		
+		// Select File to read
+
+		//ToDo read hole file data
+		impl += "var cmd = new ByteString(\"00 B0 00 00 01\", HEX);\n";
+		impl += "card.gt_sendCommand(cmd);\n";
+		readFile.setImplementation(impl);
+		
+	}
+
 	
 	@Override
 	public void addCommands(List<ScshCommand> commandList) {
@@ -186,6 +233,8 @@ public class ProtocolProvider extends AbstractScshProtocolProvider {
 		commandList.add(mutualAuthenticate);
 		commandList.add(selectAID);
 		commandList.add(readBinary);
+		commandList.add(selectFile);
+		commandList.add(readFile);
 	}
 
 }

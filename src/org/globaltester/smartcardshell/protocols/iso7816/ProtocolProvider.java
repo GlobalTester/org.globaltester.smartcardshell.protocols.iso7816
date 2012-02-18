@@ -212,7 +212,6 @@ public class ProtocolProvider extends AbstractScshProtocolProvider {
 		String impl = "";
 		impl += "if (!(fileIdentifier instanceof ByteString)) fileIdentifier = new ByteString(fileIdentifier,HEX);\n";
 		impl += "this.gt_ISO7816_selectFile(fileIdentifier);\n";
-		impl += "assertStatusWord(SW_NoError, card.SW.toString(HEX));\n";
 		impl += "var header = this.gt_ISO7816_readBinary(0, 4);\n";
 		impl += "print(\"File Header: \"+header);\n";
 		impl += "var fileLength = checkLengthEncoding(header.bytes(1,3));\n";
@@ -228,7 +227,6 @@ public class ProtocolProvider extends AbstractScshProtocolProvider {
 		impl += "if (_readBuffer == 0){\n";
 		impl += "while (offset < fileLength) {\n";
 		impl += "		var tmp = this.gt_ISO7816_readBinary(offset, 255);\n";
-		impl += "		assertStatusWord(SW_NoError, card.SW.toString(HEX));\n";
 		impl += "		rsp = rsp.concat(tmp);\n";
 		impl += "		offset = offset + tmp.length;\n";
 		impl += "		print(\"Read \" + rsp.length + \" of \" + fileLength + \" bytes.\");\n";
@@ -237,20 +235,17 @@ public class ProtocolProvider extends AbstractScshProtocolProvider {
 		impl += "	if (fileLength > blocksize) {\n";
 		impl += "		while (offset < fileLength - blocksize) {\n";
 		impl += "			tmp = this.gt_ISO7816_readBinary(offset, blocksize);\n";
-		impl += "			assertStatusWord(SW_NoError, card.SW.toString(HEX));\n";
 		impl += "			rsp = rsp.concat(tmp);\n";
 		impl += "			offset = offset + tmp.length;\n";
 		impl += "			print(\"Read \" + rsp.length + \" of \" + fileLength + \" bytes.\");\n";
 		impl += "		}\n";
 		impl += "		tmp = this.gt_ISO7816_readBinary(offset, fileLength - offset);\n";
-		impl += "		assertStatusWord(SW_NoError, card.SW.toString(HEX));\n";
 		impl += "		rsp = rsp.concat(tmp);\n";
 		impl += "		offset = offset + tmp.length;\n";
 		impl += "		print(\"Read \" + rsp.length + \" of \" + fileLength + \" bytes.\");\n";
 		impl += "	}\n";
 		impl += "	else {\n";
 		impl += "		tmp = this.gt_ISO7816_readBinary(0, fileLength);\n";
-		impl += "		assertStatusWord(SW_NoError, card.SW.toString(HEX));\n";
 		impl += "		rsp = rsp.concat(tmp);\n";
 		impl += "		offset = offset + tmp.length;\n";
 		impl += "		print(\"Read \" + rsp.length + \" of \" + fileLength + \" bytes.\");\n";

@@ -132,45 +132,39 @@ public class ProtocolProvider extends AbstractScshProtocolProvider {
 	private static ScshCommand readBinary;
 	{
 		readBinary = new ScshCommand("readBinary");
-		readBinary.setHelp("Send read binary with P1, P2, command data, and le as String or ByteString");
-		readBinary.setHelpReturn("data was read from file as ByteString");
+		readBinary.setHelp("Send read binary with offset and le as Integer");
+		readBinary.setHelpReturn("file data as ByteString");
 		
-		ScshCommandParameter p1Param = new ScshCommandParameter("p1");
-		p1Param.setHelp("String or byteString as P1 of the APDU");
-		readBinary.addParam(p1Param);
-		
-		ScshCommandParameter p2Param = new ScshCommandParameter("p2");
-		p2Param.setHelp("String or byteString as P2 of the APDU");
-		readBinary.addParam(p2Param);
-		
-		ScshCommandParameter dataParam = new ScshCommandParameter("cdata");
-		dataParam.setHelp("ByteString or string containing the command datafield, if not present the command will have no data field");
-		readBinary.addParam(dataParam);
+		ScshCommandParameter offsetParam = new ScshCommandParameter("offset");
+		offsetParam.setHelp("Integer as offset");
+		readBinary.addParam(offsetParam);
 		
 		ScshCommandParameter leParam = new ScshCommandParameter("le");
 		leParam.setHelp("Integer from which Le will be constructed, 256 will be encoded as 00 in short format, 65536 will be ancoded as 0000 in extended length format, if parameter is absent the command APDU will not contain an Le field");
 		readBinary.addParam(leParam);
 		
 		String impl = "";
-		impl += "if (!(p1 == undefined))\n";
-		impl += "	if (!(p1 instanceof ByteString)) p1 = new ByteString(p1,HEX);\n";
-		impl += "if (!(p2 == undefined))\n";
-		impl += "	if (!(p2 instanceof ByteString)) p2 = new ByteString(p2,HEX);\n";
-		impl += "if (!(cdata == undefined))\n";
-		impl += "	if (!(cdata instanceof ByteString)) cdata = new ByteString(cdata,HEX);\n";
-		impl += "if (!(le == undefined))\n";
-		impl += "	if (!(le instanceof ByteString)) le = new ByteString(le,HEX);\n";
+
+		impl += "if (offset instanceof String) \n";
+		impl += "if (offset instanceof ByteString) offset = HexString.hexifyShort(offset);\n";
+
+		impl += "print(\"Offset = \"+offset);\n";
+		impl += "print(\"Length = \"+le);\n";
+		
+		impl += "if (le > 255) {print(\"LE byte to big! Set LE to: 0x00 \"); le = 0;}\n";
+		impl += "if (offset > 32767) {print(\"Offset byte too big! Set Offset to: 0x7FFF \"); offset = 32767;}\n";
 		impl += "var cmd = new ByteString(\"00 B0\", HEX);\n";
-		impl += "    cmd = cmd.concat(new ByteString(p1,HEX));\n";
-		impl += "    cmd = cmd.concat(new ByteString(p2,HEX));\n";
-		//FIXME handle extendedLength
-		impl += "if (data) {\n";
-		impl += "    cmd = cmd.concat(new ByteString(HexString.hexifyByte(cdata.length),HEX));\n";
-		impl += "    cmd = cmd.concat(new ByteString(cdata,HEX));\n";
+		impl += "if (le <= 255) {\n";
+		impl += "	if (offset <= 255) {\n";
+		impl += "		cmd = cmd.concat(new ByteString(\"00\",HEX));\n";
+		impl += "		cmd = cmd.concat(new ByteString(HexString.hexifyByte(offset),HEX));\n";
+		impl += "	}\n";
+		impl += "	else\n";
+		impl += "	{\n";
+		impl += "		cmd = cmd.concat(new ByteString(HexString.hexifyShort(offset),HEX));\n";
+		impl += "	}\n";
 		impl += "}\n";
-		impl += "if (le) {\n";
-		impl += "    cmd = cmd.concat(new ByteString(le,HEX));\n";
-		impl += "}\n";
+		impl += "	cmd = cmd.concat(new ByteString(HexString.hexifyByte(le),HEX));\n";
 		impl += "\n";
 		impl += "var rdata = card.gt_sendCommand(cmd);\n";
 		impl += "return rdata;\n";
@@ -183,7 +177,7 @@ public class ProtocolProvider extends AbstractScshProtocolProvider {
 		selectFile.setHelp("Send select file with file identifier");
 		
 		ScshCommandParameter fidParam = new ScshCommandParameter("fileIdentifier");
-		fidParam.setHelp("file identifier with one or two bytes as string or ByteString");
+		fidParam.setHelp("file identifier with one or two bytes as String or ByteString");
 		selectFile.addParam(fidParam);
 		
 		String impl = "";
@@ -206,23 +200,57 @@ public class ProtocolProvider extends AbstractScshProtocolProvider {
 	{
 		
 		readFile = new ScshCommand("readFile");
-		readFile.setHelp("Send read file with fileIdentifier");
+		readFile.setHelp("Send read file with fileIdentifier ID");
+		readFile.setHelpReturn("file data returned by card as ByteString");
 		
 		ScshCommandParameter fidParam = new ScshCommandParameter("fileIdentifier");
 		fidParam.setHelp("file Identifier with one byte as String or ByteString");
 		readFile.addParam(fidParam);
-		readFile.setHelpReturn("data was read from file as ByteString");
 		
 		String impl = "";
 		impl += "if (!(fileIdentifier instanceof ByteString)) fileIdentifier = new ByteString(fileIdentifier,HEX);\n";
-		
-		// Select File to read
+		impl += "this.gt_ISO7816_selectFile(fileIdentifier);\n";
+		impl += "var header = this.gt_ISO7816_readBinary(0, 4);\n";
+		impl += "print(\"File Header: \"+header);\n";
+		impl += "var fileLength = checkLengthEncoding(header.bytes(1,3));\n";
+		impl += "print(\"Encoded File Length: \"+fileLength +\" bytes\");\n";
+		impl += "fileLength = fileLength + 1 +getSizeHelper(fileLength);\n";
+		impl += "offset = 0;\n";
 
-		//ToDo read hole file data
-		impl += "var cmd = new ByteString(\"00 B0 00 00 01\", HEX);\n";
-		impl += "card.gt_sendCommand(cmd);\n";
+		// Maybe set other values in future
+		impl += "var _readBuffer = 223;\n";
+		impl += "var blocksize = 223;\n";
+
+		impl += "var rsp = new ByteString(\"\", HEX);\n";
+		impl += "if (_readBuffer == 0){\n";
+		impl += "while (offset < fileLength) {\n";
+		impl += "		var tmp = this.gt_ISO7816_readBinary(offset, 255);\n";
+		impl += "		rsp = rsp.concat(tmp);\n";
+		impl += "		offset = offset + tmp.length;\n";
+		impl += "		print(\"Read \" + rsp.length + \" of \" + fileLength + \" bytes.\");\n";
+		impl += "}\n";
+		impl += "} else {\n";
+		impl += "	if (fileLength > blocksize) {\n";
+		impl += "		while (offset < fileLength - blocksize) {\n";
+		impl += "			tmp = this.gt_ISO7816_readBinary(offset, blocksize);\n";
+		impl += "			rsp = rsp.concat(tmp);\n";
+		impl += "			offset = offset + tmp.length;\n";
+		impl += "			print(\"Read \" + rsp.length + \" of \" + fileLength + \" bytes.\");\n";
+		impl += "		}\n";
+		impl += "		tmp = this.gt_ISO7816_readBinary(offset, fileLength - offset);\n";
+		impl += "		rsp = rsp.concat(tmp);\n";
+		impl += "		offset = offset + tmp.length;\n";
+		impl += "		print(\"Read \" + rsp.length + \" of \" + fileLength + \" bytes.\");\n";
+		impl += "	}\n";
+		impl += "	else {\n";
+		impl += "		tmp = this.gt_ISO7816_readBinary(0, fileLength);\n";
+		impl += "		rsp = rsp.concat(tmp);\n";
+		impl += "		offset = offset + tmp.length;\n";
+		impl += "		print(\"Read \" + rsp.length + \" of \" + fileLength + \" bytes.\");\n";
+		impl += "	}		\n";
+		impl += "}\n";	
+		impl += "return rsp;\n";	
 		readFile.setImplementation(impl);
-		
 	}
 
 	

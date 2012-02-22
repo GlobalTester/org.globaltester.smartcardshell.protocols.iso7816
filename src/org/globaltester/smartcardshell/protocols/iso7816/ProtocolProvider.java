@@ -9,7 +9,7 @@ import org.globaltester.smartcardshell.protocols.ScshCommandParameter;
 
 public class ProtocolProvider extends AbstractScshProtocolProvider {
 	
-	private static final String ignoreSWsetHelpText = "Boolean value if set to true StatusWord will not be checked";
+	private static final String IGNORE_SW_HELP_TEXT = "Boolean value if set to true StatusWord will not be checked";
 	private static ScshCommand getChallenge;
 	{
 		getChallenge = new ScshCommand("getChallenge");
@@ -21,7 +21,7 @@ public class ProtocolProvider extends AbstractScshProtocolProvider {
 		getChallenge.addParam(leParam);
 		
 		ScshCommandParameter ignoreStatusWord = new ScshCommandParameter("ignoreSW");
-		ignoreStatusWord.setHelp(ignoreSWsetHelpText);
+		ignoreStatusWord.setHelp(IGNORE_SW_HELP_TEXT);
 		getChallenge.addParam(ignoreStatusWord);
 
 		String impl = "";
@@ -51,7 +51,7 @@ public class ProtocolProvider extends AbstractScshProtocolProvider {
 		mutualAuthenticate.addParam(leParam);
 		
 		ScshCommandParameter ignoreStatusWord = new ScshCommandParameter("ignoreSW");
-		ignoreStatusWord.setHelp(ignoreSWsetHelpText);
+		ignoreStatusWord.setHelp(IGNORE_SW_HELP_TEXT);
 		mutualAuthenticate.addParam(ignoreStatusWord);
 
 		String impl = "";
@@ -126,7 +126,7 @@ public class ProtocolProvider extends AbstractScshProtocolProvider {
 		selectAID.addParam(aidParam);
 		
 		ScshCommandParameter ignoreStatusWord = new ScshCommandParameter("ignoreSW");
-		ignoreStatusWord.setHelp(ignoreSWsetHelpText);
+		ignoreStatusWord.setHelp(IGNORE_SW_HELP_TEXT);
 		selectAID.addParam(ignoreStatusWord);
 		
 		String impl = "";
@@ -157,7 +157,7 @@ public class ProtocolProvider extends AbstractScshProtocolProvider {
 		readBinary.addParam(leParam);
 		
 		ScshCommandParameter ignoreStatusWord = new ScshCommandParameter("ignoreSW");
-		ignoreStatusWord.setHelp(ignoreSWsetHelpText);
+		ignoreStatusWord.setHelp(IGNORE_SW_HELP_TEXT);
 		readBinary.addParam(ignoreStatusWord);
 
 		
@@ -197,7 +197,7 @@ public class ProtocolProvider extends AbstractScshProtocolProvider {
 		selectFile.addParam(fidParam);
 		
 		ScshCommandParameter ignoreStatusWord = new ScshCommandParameter("ignoreSW");
-		ignoreStatusWord.setHelp(ignoreSWsetHelpText);
+		ignoreStatusWord.setHelp(IGNORE_SW_HELP_TEXT);
 		selectFile.addParam(ignoreStatusWord);
 		
 		String impl = "";

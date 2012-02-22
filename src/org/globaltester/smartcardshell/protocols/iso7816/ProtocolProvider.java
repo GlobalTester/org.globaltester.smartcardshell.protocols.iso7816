@@ -230,9 +230,8 @@ public class ProtocolProvider extends AbstractScshProtocolProvider {
 		impl += "this.gt_ISO7816_selectFile(fileIdentifier);\n";
 		impl += "var header = this.gt_ISO7816_readBinary(0, 4);\n";
 		impl += "print(\"File Header: \"+header);\n";
-		impl += "var fileLength = TLVUtil.checkLengthEncoding(header.bytes(0));\n";
-		impl += "print(\"Encoded File Length: \"+fileLength +\" bytes\");\n";
-		impl += "fileLength = fileLength + 1 + TLVUtil.getSizeHelper(fileLength);\n";
+		impl += "var fileLength = TLVUtil.getLength(header.bytes(0),1);\n";
+		impl += "print(\"File Length: \"+fileLength +\" bytes\");\n";
 		impl += "offset = 0;\n";
 
 		// Maybe set other values in future

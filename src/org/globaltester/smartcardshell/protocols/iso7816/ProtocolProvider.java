@@ -18,14 +18,19 @@ public class ProtocolProvider extends AbstractScshProtocolProvider {
 		ScshCommandParameter leParam = new ScshCommandParameter("lengthExpected");
 		leParam.setHelp("Integer describing the expected length of the challenge, defaults to 8 if not present (this will be encoded as Le field in the APDU)");
 		getChallenge.addParam(leParam);
+		
+		ScshCommandParameter ignoreStatusWord = new ScshCommandParameter("ignoreSW");
+		ignoreStatusWord.setHelp("Bollean value to set if Mutual Authentication should proof the StatusWord");
+		getChallenge.addParam(ignoreStatusWord);
 
 		String impl = "";
+		impl += "if (ignoreSW == undefined) ignoreSW = false;\n";
 		impl += "if (lengthExpected == undefined) lengthExpected = 8;\n";
 		impl += "\n";
 		impl += "var cmd = this.gt_ISO7816_buildAPDU(0x00, 0x84, 0x00, 0x00, undefined, lengthExpected);\n"; 
 		impl += "\n";
 		impl += "var challenge = this.gt_sendCommand(cmd);\n";
-		impl += "assertStatusWord(SW_NoError, card.SW.toString(HEX));\n";
+		impl += "if (!(ignoreSW)) assertStatusWord(SW_NoError, card.SW.toString(HEX));\n";
 		impl += "\n";
 		impl += "return challenge\n";
 		getChallenge.setImplementation(impl);
@@ -44,14 +49,19 @@ public class ProtocolProvider extends AbstractScshProtocolProvider {
 		ScshCommandParameter leParam = new ScshCommandParameter("lengthExpected");
 		leParam.setHelp("Integer describing the expected length of the returned authentication data, defaults to length of input if not present (this will be encoded as Le field in the APDU)");
 		mutualAuthenticate.addParam(leParam);
+		
+		ScshCommandParameter ignoreStatusWord = new ScshCommandParameter("ignoreSW");
+		ignoreStatusWord.setHelp("Bollean value to set if Mutual Authentication should proof the StatusWord");
+		mutualAuthenticate.addParam(ignoreStatusWord);
 
 		String impl = "";
+		impl += "if (ignoreSW == undefined) ignoreSW = false;\n";
 		impl += "if ((lengthExpected == undefined) && (commandData instanceof ByteString)) lengthExpected = commandData.length;\n";
 		impl += "\n";
 		impl += "var cmd = this.gt_ISO7816_buildAPDU(0x00, 0x82, 0x00, 0x00, commandData, lengthExpected);\n"; 
 		impl += "\n";
 		impl += "var challenge = this.gt_sendCommand(cmd);\n";
-		impl += "assertStatusWord(SW_NoError, card.SW.toString(HEX));\n";
+		impl += "if (!(ignoreSW)) assertStatusWord(SW_NoError, card.SW.toString(HEX));\n";
 		impl += "\n";
 		impl += "return challenge\n";
 		mutualAuthenticate.setImplementation(impl);
@@ -116,14 +126,19 @@ public class ProtocolProvider extends AbstractScshProtocolProvider {
 		aidParam.setHelp("AID to select as String or ByteString");
 		selectAID.addParam(aidParam);
 		
+		ScshCommandParameter ignoreStatusWord = new ScshCommandParameter("ignoreSW");
+		ignoreStatusWord.setHelp("Bollean value to set if SelectFile should proof the StatusWord");
+		selectAID.addParam(ignoreStatusWord);
+		
 		String impl = "";
+		impl += "if (ignoreSW == undefined) ignoreSW = false;\n";
 		impl += "if (!(aid instanceof ByteString)) aid = new ByteString(aid,HEX);\n";
 		impl += "var cmd = new ByteString(\"00 A4 04 00\", HEX);\n";
 		impl += "    cmd = cmd.concat(new ByteString(HexString.hexifyByte(aid.length),HEX));\n";
 		impl += "    cmd = cmd.concat(new ByteString(aid,HEX));\n";
 		impl += "    cmd = cmd.concat(new ByteString(\"00\",HEX));\n";
 		impl += "var fci = card.gt_sendCommand(cmd);\n";
-		impl += "assertStatusWord(SW_NoError, card.SW.toString(HEX));\n";
+		impl += "if (!(ignoreSW)) assertStatusWord(SW_NoError, card.SW.toString(HEX));\n";
 		impl += "return fci;\n";
 		selectAID.setImplementation(impl);
 	}
@@ -143,10 +158,16 @@ public class ProtocolProvider extends AbstractScshProtocolProvider {
 		leParam.setHelp("Integer from which Le will be constructed, 256 will be encoded as 00 in short format, 65536 will be ancoded as 0000 in extended length format, if parameter is absent the command APDU will not contain an Le field");
 		readBinary.addParam(leParam);
 		
-		String impl = "";
+		ScshCommandParameter ignoreStatusWord = new ScshCommandParameter("ignoreSW");
+		ignoreStatusWord.setHelp("Bollean value to set if SelectFile should proof the StatusWord");
+		readBinary.addParam(ignoreStatusWord);
 
-		impl += "if (offset instanceof String) \n";
+		
+		String impl = "";
+		
+		impl += "if (ignoreSW == undefined) ignoreSW = false;\n";
 		impl += "if (offset instanceof ByteString) offset = HexString.hexifyShort(offset);\n";
+		impl += "if (le instanceof ByteString) le = HexString.hexifyShort(le);\n";
 
 		impl += "print(\"Offset = \"+offset);\n";
 		impl += "print(\"Length = \"+le);\n";
@@ -158,16 +179,14 @@ public class ProtocolProvider extends AbstractScshProtocolProvider {
 		impl += "	if (offset <= 255) {\n";
 		impl += "		cmd = cmd.concat(new ByteString(\"00\",HEX));\n";
 		impl += "		cmd = cmd.concat(new ByteString(HexString.hexifyByte(offset),HEX));\n";
-		impl += "	}\n";
-		impl += "	else\n";
-		impl += "	{\n";
+		impl += "	} else {\n";
 		impl += "		cmd = cmd.concat(new ByteString(HexString.hexifyShort(offset),HEX));\n";
 		impl += "	}\n";
 		impl += "}\n";
 		impl += "	cmd = cmd.concat(new ByteString(HexString.hexifyByte(le),HEX));\n";
 		impl += "\n";
 		impl += "var rdata = card.gt_sendCommand(cmd);\n";
-		impl += "assertStatusWord(SW_NoError, card.SW.toString(HEX));\n";
+		impl += "if (!(ignoreSW)) assertStatusWord(SW_NoError, card.SW.toString(HEX));\n";
 		impl += "return rdata;\n";
 		readBinary.setImplementation(impl);
 	}
@@ -181,20 +200,22 @@ public class ProtocolProvider extends AbstractScshProtocolProvider {
 		fidParam.setHelp("file identifier with one or two bytes as String or ByteString");
 		selectFile.addParam(fidParam);
 		
+		ScshCommandParameter ignoreStatusWord = new ScshCommandParameter("ignoreSW");
+		ignoreStatusWord.setHelp("Bollean value to set if SelectFile should proof the StatusWord");
+		selectFile.addParam(ignoreStatusWord);
+		
 		String impl = "";
-		impl += "	if (!(fileIdentifier instanceof ByteString)) fileIdentifier = new ByteString(fileIdentifier,HEX);\n";
+		impl += "if (ignoreSW == undefined) ignoreSW = false;\n";
+		impl += "if (!(fileIdentifier instanceof ByteString)) fileIdentifier = new ByteString(fileIdentifier,HEX);\n";
 		impl += "var cmd = new ByteString(\"00 A4 02 0C 02\", HEX);\n";
 		impl += "if (fileIdentifier.length <= 2) {\n";
 		impl += "    cmd = cmd.concat(new ByteString(\"01\",HEX));\n";
 		impl += "    cmd = cmd.concat(new ByteString(fileIdentifier,HEX));\n";
-		impl += "}\n";
-		impl += "else \n";
-		impl += "{\n";
+		impl += "} else {\n";
 		impl += "    cmd = cmd.concat(new ByteString(fileIdentifier,HEX));\n";
 		impl += "}\n";
-		impl += "\n";
 		impl += "card.gt_sendCommand(cmd);\n";
-		impl += "assertStatusWord(SW_NoError, card.SW.toString(HEX));\n";
+		impl += "if (!(ignoreSW)) assertStatusWord(SW_NoError, card.SW.toString(HEX));\n";
 		selectFile.setImplementation(impl);
 	}
 	
@@ -214,9 +235,9 @@ public class ProtocolProvider extends AbstractScshProtocolProvider {
 		impl += "this.gt_ISO7816_selectFile(fileIdentifier);\n";
 		impl += "var header = this.gt_ISO7816_readBinary(0, 4);\n";
 		impl += "print(\"File Header: \"+header);\n";
-		impl += "var fileLength = checkLengthEncoding(header.bytes(1,3));\n";
+		impl += "var fileLength = TLVUtil.checkLengthEncoding(header.bytes(0));\n";
 		impl += "print(\"Encoded File Length: \"+fileLength +\" bytes\");\n";
-		impl += "fileLength = fileLength + 1 +getSizeHelper(fileLength);\n";
+		impl += "fileLength = fileLength + 1 + getSizeHelper(fileLength);\n";
 		impl += "offset = 0;\n";
 
 		// Maybe set other values in future
@@ -225,12 +246,12 @@ public class ProtocolProvider extends AbstractScshProtocolProvider {
 
 		impl += "var rsp = new ByteString(\"\", HEX);\n";
 		impl += "if (_readBuffer == 0){\n";
-		impl += "while (offset < fileLength) {\n";
+		impl += "	while (offset < fileLength) {\n";
 		impl += "		var tmp = this.gt_ISO7816_readBinary(offset, 255);\n";
 		impl += "		rsp = rsp.concat(tmp);\n";
 		impl += "		offset = offset + tmp.length;\n";
 		impl += "		print(\"Read \" + rsp.length + \" of \" + fileLength + \" bytes.\");\n";
-		impl += "}\n";
+		impl += "	}\n";
 		impl += "} else {\n";
 		impl += "	if (fileLength > blocksize) {\n";
 		impl += "		while (offset < fileLength - blocksize) {\n";
@@ -243,8 +264,7 @@ public class ProtocolProvider extends AbstractScshProtocolProvider {
 		impl += "		rsp = rsp.concat(tmp);\n";
 		impl += "		offset = offset + tmp.length;\n";
 		impl += "		print(\"Read \" + rsp.length + \" of \" + fileLength + \" bytes.\");\n";
-		impl += "	}\n";
-		impl += "	else {\n";
+		impl += "	} else {\n";
 		impl += "		tmp = this.gt_ISO7816_readBinary(0, fileLength);\n";
 		impl += "		rsp = rsp.concat(tmp);\n";
 		impl += "		offset = offset + tmp.length;\n";

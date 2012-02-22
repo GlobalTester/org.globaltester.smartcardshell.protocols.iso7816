@@ -8,7 +8,8 @@ import org.globaltester.smartcardshell.protocols.ScshCommandParameter;
 
 
 public class ProtocolProvider extends AbstractScshProtocolProvider {
-
+	
+	private static final String ignoreSWsetHelpText = "Boolean value if set to true StatusWord will not be checked";
 	private static ScshCommand getChallenge;
 	{
 		getChallenge = new ScshCommand("getChallenge");
@@ -20,11 +21,10 @@ public class ProtocolProvider extends AbstractScshProtocolProvider {
 		getChallenge.addParam(leParam);
 		
 		ScshCommandParameter ignoreStatusWord = new ScshCommandParameter("ignoreSW");
-		ignoreStatusWord.setHelp("Bollean value to set if Mutual Authentication should proof the StatusWord");
+		ignoreStatusWord.setHelp(ignoreSWsetHelpText);
 		getChallenge.addParam(ignoreStatusWord);
 
 		String impl = "";
-		impl += "if (ignoreSW == undefined) ignoreSW = false;\n";
 		impl += "if (lengthExpected == undefined) lengthExpected = 8;\n";
 		impl += "\n";
 		impl += "var cmd = this.gt_ISO7816_buildAPDU(0x00, 0x84, 0x00, 0x00, undefined, lengthExpected);\n"; 
@@ -51,11 +51,10 @@ public class ProtocolProvider extends AbstractScshProtocolProvider {
 		mutualAuthenticate.addParam(leParam);
 		
 		ScshCommandParameter ignoreStatusWord = new ScshCommandParameter("ignoreSW");
-		ignoreStatusWord.setHelp("Bollean value to set if Mutual Authentication should proof the StatusWord");
+		ignoreStatusWord.setHelp(ignoreSWsetHelpText);
 		mutualAuthenticate.addParam(ignoreStatusWord);
 
 		String impl = "";
-		impl += "if (ignoreSW == undefined) ignoreSW = false;\n";
 		impl += "if ((lengthExpected == undefined) && (commandData instanceof ByteString)) lengthExpected = commandData.length;\n";
 		impl += "\n";
 		impl += "var cmd = this.gt_ISO7816_buildAPDU(0x00, 0x82, 0x00, 0x00, commandData, lengthExpected);\n"; 
@@ -127,11 +126,10 @@ public class ProtocolProvider extends AbstractScshProtocolProvider {
 		selectAID.addParam(aidParam);
 		
 		ScshCommandParameter ignoreStatusWord = new ScshCommandParameter("ignoreSW");
-		ignoreStatusWord.setHelp("Bollean value to set if SelectFile should proof the StatusWord");
+		ignoreStatusWord.setHelp(ignoreSWsetHelpText);
 		selectAID.addParam(ignoreStatusWord);
 		
 		String impl = "";
-		impl += "if (ignoreSW == undefined) ignoreSW = false;\n";
 		impl += "if (!(aid instanceof ByteString)) aid = new ByteString(aid,HEX);\n";
 		impl += "var cmd = new ByteString(\"00 A4 04 00\", HEX);\n";
 		impl += "    cmd = cmd.concat(new ByteString(HexString.hexifyByte(aid.length),HEX));\n";
@@ -159,13 +157,11 @@ public class ProtocolProvider extends AbstractScshProtocolProvider {
 		readBinary.addParam(leParam);
 		
 		ScshCommandParameter ignoreStatusWord = new ScshCommandParameter("ignoreSW");
-		ignoreStatusWord.setHelp("Bollean value to set if SelectFile should proof the StatusWord");
+		ignoreStatusWord.setHelp(ignoreSWsetHelpText);
 		readBinary.addParam(ignoreStatusWord);
 
 		
 		String impl = "";
-		
-		impl += "if (ignoreSW == undefined) ignoreSW = false;\n";
 		impl += "if (offset instanceof ByteString) offset = HexString.hexifyShort(offset);\n";
 		impl += "if (le instanceof ByteString) le = HexString.hexifyShort(le);\n";
 
@@ -201,11 +197,10 @@ public class ProtocolProvider extends AbstractScshProtocolProvider {
 		selectFile.addParam(fidParam);
 		
 		ScshCommandParameter ignoreStatusWord = new ScshCommandParameter("ignoreSW");
-		ignoreStatusWord.setHelp("Bollean value to set if SelectFile should proof the StatusWord");
+		ignoreStatusWord.setHelp(ignoreSWsetHelpText);
 		selectFile.addParam(ignoreStatusWord);
 		
 		String impl = "";
-		impl += "if (ignoreSW == undefined) ignoreSW = false;\n";
 		impl += "if (!(fileIdentifier instanceof ByteString)) fileIdentifier = new ByteString(fileIdentifier,HEX);\n";
 		impl += "var cmd = new ByteString(\"00 A4 02 0C 02\", HEX);\n";
 		impl += "if (fileIdentifier.length <= 2) {\n";
@@ -237,7 +232,7 @@ public class ProtocolProvider extends AbstractScshProtocolProvider {
 		impl += "print(\"File Header: \"+header);\n";
 		impl += "var fileLength = TLVUtil.checkLengthEncoding(header.bytes(0));\n";
 		impl += "print(\"Encoded File Length: \"+fileLength +\" bytes\");\n";
-		impl += "fileLength = fileLength + 1 + getSizeHelper(fileLength);\n";
+		impl += "fileLength = fileLength + 1 + TLVUtil.getSizeHelper(fileLength);\n";
 		impl += "offset = 0;\n";
 
 		// Maybe set other values in future

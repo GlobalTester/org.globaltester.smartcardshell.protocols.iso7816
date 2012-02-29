@@ -134,7 +134,6 @@ public class ProtocolProvider extends AbstractScshProtocolProvider {
 		impl += "var cmd = new ByteString(\"00 A4 04 0C\", HEX);\n";
 		impl += "    cmd = cmd.concat(new ByteString(HexString.hexifyByte(aid.length),HEX));\n";
 		impl += "    cmd = cmd.concat(new ByteString(aid,HEX));\n";
-		impl += "    cmd = cmd.concat(new ByteString(\"00\",HEX));\n";
 		impl += "card.gt_sendCommand(cmd);\n";
 		impl += "if (!(ignoreSW)) assertStatusWord(SW_NoError, card.SW.toString(HEX));\n";
 		selectAID.setImplementation(impl);

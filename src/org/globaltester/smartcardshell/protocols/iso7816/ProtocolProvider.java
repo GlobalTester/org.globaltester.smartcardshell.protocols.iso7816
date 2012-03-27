@@ -66,6 +66,22 @@ public class ProtocolProvider extends AbstractScshProtocolProvider {
 		mutualAuthenticate.setImplementation(impl);
 	}
 	
+	private static ScshCommand selectMF;
+	{
+		selectMF = new ScshCommand("selectMF");
+		selectMF.setHelp("Select the card MF (Master File)");
+		
+		ScshCommandParameter ignoreStatusWord = new ScshCommandParameter("ignoreSW");
+		ignoreStatusWord.setHelp(IGNORE_SW_HELP_TEXT);
+		selectMF.addParam(ignoreStatusWord);
+		
+		String impl = "";
+		impl += "var cmd = new ByteString(\"00 A4 00 0C 02 3F 00\", HEX);\n";
+		impl += "	 card.gt_sendCommand(cmd);\n";
+		impl += "if (!(ignoreSW)) assertStatusWord(SW_NoError, card.SW.toString(HEX));\n";
+		selectMF.setImplementation(impl);
+	}
+	
 	private static ScshCommand buildAPDU;
 	{
 		buildAPDU = new ScshCommand("buildAPDU");
@@ -138,7 +154,7 @@ public class ProtocolProvider extends AbstractScshProtocolProvider {
 		selectAID.setImplementation(impl);
 	}
 	
-	private static ScshCommand selectAIDgetFCI ;
+	private static ScshCommand selectAIDgetFCI;
 	{
 		selectAIDgetFCI = new ScshCommand("selectAIDgetFCI");
 		selectAIDgetFCI.setHelp("Select the card application with the given ID and return FCI as ByteString");
@@ -298,6 +314,7 @@ public class ProtocolProvider extends AbstractScshProtocolProvider {
 		commandList.add(buildAPDU);
 		commandList.add(getChallenge);
 		commandList.add(mutualAuthenticate);
+		commandList.add(selectMF);
 		commandList.add(selectAID);
 		commandList.add(selectAIDgetFCI);
 		commandList.add(readBinary);

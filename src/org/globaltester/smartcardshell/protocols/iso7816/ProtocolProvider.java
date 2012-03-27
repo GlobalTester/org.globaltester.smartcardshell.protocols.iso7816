@@ -118,8 +118,7 @@ public class ProtocolProvider extends AbstractScshProtocolProvider {
 	private static ScshCommand selectAID;
 	{
 		selectAID = new ScshCommand("selectAID");
-		selectAID.setHelp("Select the card application with the given ID and return FCI as ByteString");
-		selectAID.setHelpReturn("file control information (fci) of selected application as ByteString");
+		selectAID.setHelp("Select the card application with the given ID");
 		
 		ScshCommandParameter aidParam = new ScshCommandParameter("aid");
 		aidParam.setHelp("AID to select as String or ByteString");
@@ -131,6 +130,30 @@ public class ProtocolProvider extends AbstractScshProtocolProvider {
 		
 		String impl = "";
 		impl += "if (!(aid instanceof ByteString)) aid = new ByteString(aid,HEX);\n";
+		impl += "var cmd = new ByteString(\"00 A4 04 0C\", HEX);\n";
+		impl += "    cmd = cmd.concat(new ByteString(HexString.hexifyByte(aid.length),HEX));\n";
+		impl += "    cmd = cmd.concat(new ByteString(aid,HEX));\n";
+		impl += "	 card.gt_sendCommand(cmd);\n";
+		impl += "if (!(ignoreSW)) assertStatusWord(SW_NoError, card.SW.toString(HEX));\n";
+		selectAID.setImplementation(impl);
+	}
+	
+	private static ScshCommand selectAIDgetFCI ;
+	{
+		selectAIDgetFCI = new ScshCommand("selectAIDgetFCI");
+		selectAIDgetFCI.setHelp("Select the card application with the given ID and return FCI as ByteString");
+		selectAIDgetFCI.setHelpReturn("file control information (fci) of selected application as ByteString");
+		
+		ScshCommandParameter aidParam = new ScshCommandParameter("aid");
+		aidParam.setHelp("AID to select as String or ByteString");
+		selectAIDgetFCI.addParam(aidParam);
+		
+		ScshCommandParameter ignoreStatusWord = new ScshCommandParameter("ignoreSW");
+		ignoreStatusWord.setHelp(IGNORE_SW_HELP_TEXT);
+		selectAIDgetFCI.addParam(ignoreStatusWord);
+		
+		String impl = "";
+		impl += "if (!(aid instanceof ByteString)) aid = new ByteString(aid,HEX);\n";
 		impl += "var cmd = new ByteString(\"00 A4 04 00\", HEX);\n";
 		impl += "    cmd = cmd.concat(new ByteString(HexString.hexifyByte(aid.length),HEX));\n";
 		impl += "    cmd = cmd.concat(new ByteString(aid,HEX));\n";
@@ -138,7 +161,7 @@ public class ProtocolProvider extends AbstractScshProtocolProvider {
 		impl += "var fci = card.gt_sendCommand(cmd);\n";
 		impl += "if (!(ignoreSW)) assertStatusWord(SW_NoError, card.SW.toString(HEX));\n";
 		impl += "return fci;\n";
-		selectAID.setImplementation(impl);
+		selectAIDgetFCI.setImplementation(impl);
 	}
 	
 	
@@ -276,6 +299,7 @@ public class ProtocolProvider extends AbstractScshProtocolProvider {
 		commandList.add(getChallenge);
 		commandList.add(mutualAuthenticate);
 		commandList.add(selectAID);
+		commandList.add(selectAIDgetFCI);
 		commandList.add(readBinary);
 		commandList.add(selectFile);
 		commandList.add(readFile);

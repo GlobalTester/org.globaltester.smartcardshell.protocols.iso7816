@@ -10,6 +10,8 @@ import org.globaltester.smartcardshell.protocols.ScshCommandParameter;
 public class ProtocolProvider extends AbstractScshProtocolProvider {
 	
 	private static final String IGNORE_SW_HELP_TEXT = "Boolean value if set to true StatusWord will not be checked";
+	private static final String CHAINING_HELP_TEXT = "Boolean value if command chaining should be used";
+	
 	private static ScshCommand getChallenge;
 	{
 		getChallenge = new ScshCommand("getChallenge");
@@ -307,7 +309,98 @@ public class ProtocolProvider extends AbstractScshProtocolProvider {
 		impl += "return rsp;\n";	
 		readFile.setImplementation(impl);
 	}
+	private static ScshCommand setAT;
+	{
+		setAT = new ScshCommand("setAT");
+		setAT.setHelp("Send a MSE:SetAT APDU to the card");
 
+		ScshCommandParameter oidParam = new ScshCommandParameter("OID");
+		oidParam.setHelp("OID describing the PACE algorithm");
+		setAT.addParam(oidParam);
+
+		ScshCommandParameter pwdTypeParam = new ScshCommandParameter("PasswordType");
+		pwdTypeParam.setHelp("Password type defines used password (PIN, CAN, MRZ, PUK)");
+		setAT.addParam(pwdTypeParam);		
+
+		//TODO: Add also special domain parameter:
+		ScshCommandParameter domainParam = new ScshCommandParameter("DomainParameter");
+		domainParam.setHelp("Domain Parameter defines defined set of domain parameter");
+		setAT.addParam(domainParam);		
+
+		ScshCommandParameter chatParam = new ScshCommandParameter("CHAT");
+		chatParam.setHelp("CHAT defines Certificate Holder Authorization Template");
+		setAT.addParam(chatParam);		
+
+		ScshCommandParameter ignoreStatusWord = new ScshCommandParameter("ignoreSW");
+		ignoreStatusWord.setHelp(IGNORE_SW_HELP_TEXT);
+		setAT.addParam(ignoreStatusWord);
+		
+		//TODO: Add also alternative P1/P2 combinations for other protocols than PACE!
+		//TODO: Add also Integrated Mapping
+		String impl = "";
+		impl += "var data = new ByteString(\"80\", HEX);";
+		impl += "if (OID.equals(\"id-PACE-DH-GM-3DES-CBC-CBC\")) { oid = new ByteString(\"04 00 7F 00 07 02 02 04 01 01\", HEX)}\n";
+		impl += "else if (OID.equals(\"id-PACE-DH-GM-AES-CBC-CMAC128\")) {oid = new ByteString(\"04 00 7F 00 07 02 02 04 01 02\", HEX)}\n";
+		impl += "else if (OID.equals(\"id-PACE-DH-GM-AES-CBC-CMAC192\")) {oid = new ByteString(\"04 00 7F 00 07 02 02 04 01 03\", HEX)}\n";
+		impl += "else if (OID.equals(\"id-PACE-DH-GM-AES-CBC-CMAC256\")) {oid = new ByteString(\"04 00 7F 00 07 02 02 04 01 04\", HEX)}\n";
+		impl += "else if (OID.equals(\"id-PACE-ECDH-GM-3DES-CBC-CBC\")) {oid = new ByteString(\"04 00 7F 00 07 02 02 04 02 01\", HEX)}\n";
+		impl += "else if (OID.equals(\"id-PACE-ECDH-GM-AES-CBC-CMAC128\")) {oid = new ByteString(\"04 00 7F 00 07 02 02 04 02 02\", HEX)}\n";
+		impl += "else if (OID.equals(\"id-PACE-ECDH-GM-AES-CBC-CMAC192\")) {oid = new ByteString(\"04 00 7F 00 07 02 02 04 02 03\", HEX)}\n";
+		impl += "else if (OID.equals(\"id-PACE-ECDH-GM-AES-CBC-CMAC256\")) {oid = new ByteString(\"04 00 7F 00 07 02 02 04 02 04\", HEX)}\n";
+		impl += "else { print(\"Failure: Not a valid OID!\") };\n";
+		impl += "data = data.concat(new ByteString(HexString.hexifyByte(oid.length), HEX));";
+		impl += "data = data.concat(new ByteString(oid, HEX));";
+		
+		impl += "if (!(PasswordType instanceof java.lang.String)) PasswordType = new java.lang.String(PasswordType);\n";
+		impl += "if (PasswordType.equals(\"MRZ\")) { pwdType = new ByteString(\"(83 01 01\", HEX)}\n";
+		impl += "else if (PasswordType.equals(\"PIN\")) { pwdType = new ByteString(\"(83 01 02\", HEX)}\n";
+		impl += "else if (PasswordType.equals(\"CAN\")) { pwdType = new ByteString(\"(83 01 03\", HEX)}\n";
+		impl += "else if (PasswordType.equals(\"PUK\")) { pwdType = new ByteString(\"(83 01 04\", HEX)}\n";
+		impl += "else { print(\"Failure: Not a valid password type!\") };\n";
+		impl += "data = data.concat(new ByteString(pwdType, HEX));";
+		
+		impl += "var domainParameter = new ByteString(\"84\", HEX);";
+		impl += "if (!(DomainParameter instanceof ByteString)) DomainParameter = new ByteString(DomainParameter,HEX);\n";
+		impl += "domainParameter = domainParameter.concat(new ByteString(HexString.hexifyByte(DomainParameter.length), HEX));";
+		impl += "domainParameter = domainParameter.concat(DomainParameter);";
+		impl += "data = data.concat(new ByteString(domainParameter, HEX));";
+		
+		//TODO: Add also missing parameters like CHAT!
+		
+		impl += "var cmd = this.gt_ISO7816_buildAPDU(0x00, 0x22, 0xC1, 0xA4, data);\n"; 
+		impl += "\n";
+		impl += "this.gt_sendCommand(cmd);\n";
+		impl += "if (!(ignoreSW)) assertStatusWord(SW_NoError, card.SW.toString(HEX));\n";
+		impl += "\n";
+		setAT.setImplementation(impl);
+	}
+
+	private static ScshCommand getNonce;
+	{
+		getNonce = new ScshCommand("getNonce");
+		getNonce.setHelp("Send a GA:GetNonce APDU to the card");
+
+//		ScshCommandParameter chainingParam = new ScshCommandParameter("chaining");
+//		chainingParam.setHelp(CHAINING_HELP_TEXT);
+//		getNonce.addParam(chainingParam);
+		
+		ScshCommandParameter ignoreStatusWord = new ScshCommandParameter("ignoreSW");
+		ignoreStatusWord.setHelp(IGNORE_SW_HELP_TEXT);
+		getNonce.addParam(ignoreStatusWord);
+		
+		String impl = "";
+//		impl += "if (chaining) {chainingByte = 0x10} else {chainingByte= 0x00};\n";
+		impl += "var data = new ByteString(\"7C 00\", HEX);\n";
+		impl += "var cmd = this.gt_ISO7816_buildAPDU(0x10, 0x86, 0x00, 0x00, data, 256);\n"; 
+		impl += "\n";
+		impl += "var nonce = this.gt_sendCommand(cmd);\n";
+		impl += "if (!(ignoreSW)) assertStatusWord(SW_NoError, card.SW.toString(HEX));\n";
+		impl += "\n";
+		impl += "return nonce\n";
+		getNonce.setImplementation(impl);
+		
+	}
+	
 	
 	@Override
 	public void addCommands(List<ScshCommand> commandList) {
@@ -320,6 +413,8 @@ public class ProtocolProvider extends AbstractScshProtocolProvider {
 		commandList.add(readBinary);
 		commandList.add(selectFile);
 		commandList.add(readFile);
+		commandList.add(setAT);
+		commandList.add(getNonce);
 	}
 
 }

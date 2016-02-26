@@ -10,7 +10,6 @@ import org.globaltester.smartcardshell.protocols.ScshCommandParameter;
 public class ProtocolProvider extends AbstractScshProtocolProvider {
 	
 	private static final String IGNORE_SW_HELP_TEXT = "Boolean value if set to true StatusWord will not be checked";
-	private static final String CHAINING_HELP_TEXT = "Boolean value if command chaining should be used";
 	
 	private static ScshCommand getChallenge;
 	{
@@ -379,17 +378,12 @@ public class ProtocolProvider extends AbstractScshProtocolProvider {
 	{
 		getNonce = new ScshCommand("getNonce");
 		getNonce.setHelp("Send a GA:GetNonce APDU to the card");
-
-//		ScshCommandParameter chainingParam = new ScshCommandParameter("chaining");
-//		chainingParam.setHelp(CHAINING_HELP_TEXT);
-//		getNonce.addParam(chainingParam);
 		
 		ScshCommandParameter ignoreStatusWord = new ScshCommandParameter("ignoreSW");
 		ignoreStatusWord.setHelp(IGNORE_SW_HELP_TEXT);
 		getNonce.addParam(ignoreStatusWord);
 		
 		String impl = "";
-//		impl += "if (chaining) {chainingByte = 0x10} else {chainingByte= 0x00};\n";
 		impl += "var data = new ByteString(\"7C 00\", HEX);\n";
 		impl += "var cmd = this.gt_ISO7816_buildAPDU(0x10, 0x86, 0x00, 0x00, data, 256);\n"; 
 		impl += "\n";

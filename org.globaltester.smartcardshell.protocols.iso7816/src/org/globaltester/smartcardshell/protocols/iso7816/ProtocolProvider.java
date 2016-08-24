@@ -119,7 +119,9 @@ public class ProtocolProvider extends AbstractScshProtocolProvider {
 		impl += "cmd = cmd.concat(HexString.hexifyByte(p1));\n";
 		impl += "cmd = cmd.concat(HexString.hexifyByte(p2));\n";
 		impl += "\n";
-		//FIXME handle extendedLength
+		
+		// handle extendedLength here if needed
+		
 		impl += "if (data) {\n";
 		impl += "    cmd = cmd.concat(HexString.hexifyByte(data.length));\n";
 		impl += "    cmd = cmd.concat(data.toString(HEX));\n";
@@ -321,7 +323,6 @@ public class ProtocolProvider extends AbstractScshProtocolProvider {
 		pwdTypeParam.setHelp("Password type defines used password (PIN, CAN, MRZ, PUK)");
 		setAT.addParam(pwdTypeParam);		
 
-		//TODO: Add also special domain parameter:
 		ScshCommandParameter domainParam = new ScshCommandParameter("DomainParameter");
 		domainParam.setHelp("Domain Parameter defines defined set of domain parameter");
 		setAT.addParam(domainParam);		
@@ -334,8 +335,6 @@ public class ProtocolProvider extends AbstractScshProtocolProvider {
 		ignoreStatusWord.setHelp(IGNORE_SW_HELP_TEXT);
 		setAT.addParam(ignoreStatusWord);
 		
-		//TODO: Add also alternative P1/P2 combinations for other protocols than PACE!
-		//TODO: Add also Integrated Mapping
 		String impl = "";
 		impl += "var data = new ByteString(\"80\", HEX);";
 		impl += "if (OID.equals(\"id-PACE-DH-GM-3DES-CBC-CBC\")) { oid = new ByteString(\"04 00 7F 00 07 02 02 04 01 01\", HEX)}\n";
@@ -363,8 +362,6 @@ public class ProtocolProvider extends AbstractScshProtocolProvider {
 		impl += "domainParameter = domainParameter.concat(new ByteString(HexString.hexifyByte(DomainParameter.length), HEX));";
 		impl += "domainParameter = domainParameter.concat(DomainParameter);";
 		impl += "data = data.concat(new ByteString(domainParameter, HEX));";
-		
-		//TODO: Add also missing parameters like CHAT!
 		
 		impl += "var cmd = this.gt_ISO7816_buildAPDU(0x00, 0x22, 0xC1, 0xA4, data);\n"; 
 		impl += "\n";

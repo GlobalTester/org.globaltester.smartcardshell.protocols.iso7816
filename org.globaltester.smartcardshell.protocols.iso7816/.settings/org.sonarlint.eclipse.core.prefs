@@ -1,0 +1,5 @@
+autoEnabled=true
+eclipse.preferences.version=1
+extraProperties=
+moduleKey=org.globaltester\:org.globaltester.smartcardshell.protocols.iso7816
+serverId=sonarqube.lab.e.secunet.de

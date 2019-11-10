@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: GT Protocol ISO7816
 Bundle-SymbolicName: org.globaltester.smartcardshell.protocols.iso7816;singleton:=true
-Bundle-Version: 3.5.2.qualifier
+Bundle-Version: 3.5.3.qualifier
 Bundle-Activator: org.globaltester.smartcardshell.protocols.iso7816.Activator
 Bundle-Vendor: secunet Security Networks AG
 Require-Bundle: org.eclipse.core.runtime,
